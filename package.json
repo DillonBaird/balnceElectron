@@ -96,12 +96,16 @@
     }
   },
   "dependencies": {
+    "@xenova/transformers": "^2.17.1",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.8",
     "electron-updater": "^6.1.4",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0"
+    "react-router-dom": "^6.16.0",
+    "react-transition-group": "^4.4.5",
+    "tailwindcss": "^3.4.3"
   },
   "devDependencies": {
     "@electron/notarize": "^2.1.0",
