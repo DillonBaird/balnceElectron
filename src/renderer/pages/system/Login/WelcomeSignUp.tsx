@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable react/no-unescaped-entities */
 /* eslint-disable react/function-component-definition */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
@@ -6,6 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import BottomNavbar from '../../../components/BottomNavbar';
 import faceIcon from '../../../../../assets/face.png';
+import backIcon from '../../../../../assets/backIcon.png';
 
 interface WelcomeSignUpProps {
   onStepChange: (step: number) => void;
@@ -21,7 +24,8 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     'I have superpowers to help achieve your goals, but with great power comes great responsibility.',
     'The Story of Balnce',
     "Welcome, I'd love to know your name",
-    "Welcome, I'd love to know your name",
+    'Sign up mode activated',
+    'Sign up mode activated',
   ];
 
   // interface Actions {
@@ -42,17 +46,24 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   const [animate, setAnimate] = useState(false);
   const [messageFeed, setMessageFeed] = useState<Message[]>([]);
   const [shownAiReply, setShownAiReply] = useState(false);
-
-  const { login } = useAuth();
+  const [myName, setMyName] = useState('');
+  const [verifyDeviceModal, setVerifyDeviceModal] = useState(false);
+  const [verifyEmailModal, setVerifyEmailModal] = useState(false);
+  const [verifyCodeSent, setVerifyCodeSent] = useState(false);
+  const [deviceVerified, setDeviceVerified] = useState(false);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     onStepChange(currentStep);
+    // console.log(currentStep);
   }, [currentStep, onStepChange]);
 
   const handleClick = () => {
-    if (currentStep === 6 || currentStep > 7) {
+    if (currentStep === 8) {
+      setMessageFeed([]);
+    }
+    if (currentStep === 6 || currentStep === 7 || currentStep > 8) {
       return;
     }
     setAnimate(true);
@@ -83,11 +94,27 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   };
 
   const handleAvatarDemoClick = () => {
-    console.log('avatar demo click')
+    console.log('avatar demo click');
   };
 
   const handleSignUpClick = () => {
-    console.log('sign up click')
+    console.log('sign up click');
+    setTimeout(() => {
+      setAnimate(false);
+      setCurrentStep(8);
+    }, 300); // Duration of the animation
+  };
+
+  const handleVerifyDeviceClick = () => {
+    console.log('verify device click');
+    setVerifyDeviceModal(true);
+    console.log(verifyDeviceModal);
+  };
+
+  const handleBackClick = () => {
+    setVerifyDeviceModal(false);
+    setVerifyEmailModal(false);
+    setVerifyCodeSent(false);
   };
 
   const handleStartClick = () => {
@@ -219,6 +246,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
       setMessageFeed((prevMessageFeed) => [...prevMessageFeed, postMsg]);
 
       if (result.name) {
+        setMyName(result.name);
         setTimeout(() => {
           // Initial message
           appendToRecentAiMessage(aiMsg);
@@ -244,7 +272,8 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messageFeed]);
 
@@ -253,16 +282,224 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     userMessage(message);
   };
 
+  const handleSendVerifyCode = () => {
+    console.log('send verify code');
+    setVerifyCodeSent(true);
+  };
+
+  const handleDeviceVerified = () => {
+    setVerifyCodeSent(false);
+    setVerifyDeviceModal(false);
+    setTimeout(() => {
+      setDeviceVerified(true);
+    }, 500);
+
+    const aiMsg2: MessageContent = {
+      content: 'Device registered and verified.',
+    };
+    const aiMsg3: MessageContent = {
+      content:
+        "Now add your email address, and all of your other preferences, settings and permissions will be created once you're in.",
+      actions: [{ title: 'Add your email', onClick: handleClickEmailVerify }],
+    };
+
+    setTimeout(() => {
+      appendToRecentAiMessage(aiMsg2);
+      setTimeout(() => {
+        appendToRecentAiMessage(aiMsg3);
+      }, 500);
+    }, 800);
+  };
+
+  const handleClickEmailVerify = () => {
+    setVerifyEmailModal(true);
+  };
+
+  const handleVerifyPhoneInput = () => {
+    // input capture stull here to get phone number
+  };
+
+  const VerifyModal = () => {
+    return (
+      <div className="bg-gradient-to-b via-black from-gray-900 p-6 block h-screen w-full max-w-lg mx-auto text-xl text-white">
+        <div
+          className="mt-4 nodrag rounded-full border border-gray-600 hover:border-gray-500 hover:bg-gray-800 transition-all w-10 h-10 mx-0 p-3 inline-block fadeIn cursor-pointer"
+          onClick={handleBackClick}
+        >
+          <img draggable="false" src={backIcon} className="" alt="Back" />
+        </div>
+        <div className="flex flex-col w-full items-center mt-36">
+          <div className="scale-150">
+            <div className="rainbow-container bg-gradient-to-tr from-gray-900 bg-blue-900 animate transition-all duration-100 mb-12 absolute">
+              <div className="green" />
+              <div className="pink" />
+              <div className="blue" />
+            </div>
+          </div>
+          <h1 className="text-3xl">Verify your device</h1>
+          {verifyCodeSent ? (
+            <>
+              <span className="text-lg m-6 text-center">
+                Enter the 4 digit number that was sent to
+                <br />
+                <strong className="text-lg tracking-wider">xxx-xxx-xxxx</strong>
+              </span>
+              <div className="flex flex-row gap-2">
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+              </div>
+              <button
+                onClick={handleSendVerifyCode}
+                className="text-base m-6 bg-transparent font-semibold"
+              >
+                Resend code
+              </button>
+              <button
+                onClick={handleDeviceVerified}
+                className="text-base text-green-800 m-6 bg-transparent"
+              >
+                Simulate verify
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="text-lg m-6 text-center">
+                Enter your phone number to continue, we will send you a code to
+                verify.
+              </span>
+              <input
+                className="bg-transparent border border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                type="text"
+              />
+              <button
+                onClick={handleSendVerifyCode}
+                className="m-5 rounded-full text-lg py-4 bg-gradient-to-br from-gray-900 bg-black w-9/12 shadow-2xl shadow-blue-900"
+              >
+                Send code
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const VerifyEmailModal = () => {
+    return (
+      <div className="bg-gradient-to-b via-black from-gray-900 p-6 block h-screen w-full max-w-lg mx-auto text-xl text-white">
+        <div
+          className="mt-4 nodrag rounded-full border border-gray-600 hover:border-gray-500 hover:bg-gray-800 transition-all w-10 h-10 mx-0 p-3 inline-block fadeIn cursor-pointer"
+          onClick={handleBackClick}
+        >
+          <img draggable="false" src={backIcon} className="" alt="Back" />
+        </div>
+        <div className="flex flex-col w-full items-center mt-36">
+          <div className="scale-150">
+            <div className="rainbow-container bg-gradient-to-tr from-gray-900 bg-blue-900 animate transition-all duration-100 mb-12 absolute">
+              <div className="green" />
+              <div className="pink" />
+              <div className="blue" />
+            </div>
+          </div>
+          <h1 className="text-3xl">Verify your email</h1>
+          {verifyCodeSent ? (
+            <>
+              <span className="text-lg m-6 text-center">
+                Enter the 4 digit number that was sent to
+                <br />
+                <strong className="text-lg tracking-wider">
+                  xxxxxx@xxxx.xxx
+                </strong>
+              </span>
+              <div className="flex flex-row gap-2">
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+                <input
+                  className="bg-transparent border w-16 border-gray-700 rounded-full text-3xl p-4 font-bold text-center tracking-wider outline-none"
+                  type="text"
+                  maxLength={1}
+                />
+              </div>
+              <button
+                onClick={handleSendVerifyCode}
+                className="text-base m-6 bg-transparent font-semibold"
+              >
+                Resend code
+              </button>
+              <button
+                onClick={handleDeviceVerified}
+                className="text-base text-green-800 m-6 bg-transparent"
+              >
+                Simulate verify
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="text-lg m-6 text-center">
+                Enter your email to continue, we will send you a code to verify.
+              </span>
+              <input
+                className="bg-transparent w-10/12 border border-gray-700 rounded-full text-xl p-4 font-bold text-center tracking-wider outline-none"
+                type="text"
+              />
+              <button
+                onClick={handleSendVerifyCode}
+                className="m-5 rounded-full text-lg py-4 bg-gradient-to-br from-gray-900 bg-black w-9/12 shadow-2xl shadow-blue-900"
+              >
+                Send code
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className={`nodrag w-full h-screen mt-10 ${
-        currentStep !== 6 && currentStep < 8 ? 'cursor-pointer' : ''
+        currentStep !== 6 && currentStep !== 7 && currentStep < 9
+          ? 'cursor-pointer'
+          : ''
       }`}
       onClick={handleClick}
     >
       <div
         className={`flex max-w-lg mx-auto w-full ${
-          currentStep > 7 ? 'min-h-0 flex-col pr-10' : 'flex-col'
+          currentStep === 7 || currentStep > 8
+            ? 'min-h-0 flex-col pr-10'
+            : 'flex-col'
         }`}
       >
         <div
@@ -271,13 +508,15 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
         >
           <div
             className={`flex fadeInUp items-center justify-center align-center px-6 transition-all ${
-              currentStep > 7 ? '-ml-8 flex-row' : 'min-h-screen flex-col'
+              currentStep === 7 || currentStep > 8
+                ? '-ml-8 flex-row'
+                : 'min-h-screen flex-col'
             }`}
           >
             <div
               className={`${
-                currentStep > 7 ? 'scale-50' : 'scale-150'
-              } transform-gpu`}
+                currentStep === 7 || currentStep > 8 ? 'scale-50' : 'scale-150'
+              } ${currentStep > 8 ? '-mt-36' : '-mt-6'} transform-gpu`}
             >
               <div className="rainbow-container bg-gradient-to-tr from-gray-900 bg-blue-900 animate transition-all duration-100 mb-12 absolute">
                 <div className="green" />
@@ -287,20 +526,53 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
             </div>
             <h1
               className={`${
-                currentStep > 7
-                  ? 'text-xl leading-0 font-semibold -mt-2'
+                currentStep === 7 || currentStep > 8
+                  ? 'text-xl leading-0 font-semibold mt-2'
                   : 'text-4xl h-64'
               } ${animate ? 'fadeOutUp' : 'fadeInUp'} mb-1`}
             >
               {titles[currentStep]}
               <div
                 className={`inline-block w-full text-sm text-gray-100 font-thin tracking-wide mt-2 ${
-                  currentStep > 7 ? 'fadeInUp delay-1000' : 'hidden'
+                  currentStep === 7 || currentStep > 8
+                    ? 'fadeInUp delay-1000'
+                    : 'hidden'
                 }`}
               >
-                So i don't have to call you a user, which is impersonal, and a
-                bit rude of me. And no wrries, you can always tell me to call
-                you something else later.
+                {currentStep > 8 ? (
+                  <>
+                    {myName}, you will never regret taking this leap into the
+                    future economy with us. <br />
+                    <br />
+                    Let's verify your device so we can mint your digital
+                    identity and get you into your AI.
+                    <br />
+                    <br />
+                    <div className="w-96">
+                      <button
+                        onClick={handleVerifyDeviceClick}
+                        disabled={deviceVerified}
+                        className={`rounded-full text-sm w-full font-semibold mt-2 py-4 ${
+                          deviceVerified
+                            ? 'bg-gradient-to-tl from-green-400 bg-green-800'
+                            : 'bg-gradient-to-tl from-purple-900 bg-blue-900'
+                        }`}
+                      >
+                        {deviceVerified ? (
+                          <>✓&nbsp;&nbsp;Verify your device</>
+                        ) : (
+                          <>Verify my device</>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    So i don't have to call you a user, which is impersonal, and
+                    a bit rude of me. And no wrries, you can always tell me to
+                    call you something else later.
+                  </>
+                )}
               </div>
             </h1>
             <div
@@ -345,14 +617,16 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
           {messageFeed.map((item, index) => (
             <div
               className={`${
-                currentStep > 7 ? '' : 'hidden'
+                currentStep === 7 || currentStep > 8 ? '' : 'hidden'
               } flex scrollInChat flex-col`}
               key={index}
             >
               <div className="flex pt-6 text-sm text-gray-100 font-thin tracking-wide">
                 <div
                   className={`h-full${
-                    currentStep > 7 ? 'scale-50' : 'scale-150'
+                    currentStep === 7 || currentStep > 8
+                      ? 'scale-50'
+                      : 'scale-150'
                   } transform-gpu`}
                 >
                   {item.source === 'ai' ? (
@@ -373,7 +647,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                       {contentItem.actions ? (
                         <div className="w-full flex flex-col gap-2 mt-6 font-semibold text-xs">
                           {contentItem.actions.map((actionItem, index) => (
-                            <div key={index} className='w-11/12'>
+                            <div key={index} className="w-11/12">
                               <button
                                 onClick={actionItem.onClick}
                                 className="rounded-full text-sm w-full bg-gradient-to-tl from-purple-900 bg-blue-900 mt-2 py-4"
@@ -397,8 +671,24 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
         </div>
       </div>
       <div
+        className={`fadeInUp z-50 fixed top-0 left-0 w-full ${
+          verifyDeviceModal ? 'block' : 'fadeOutUp hidden'
+        }`}
+      >
+        <VerifyModal />
+      </div>
+      <div
+        className={`fadeInUp z-50 fixed top-0 left-0 w-full ${
+          verifyEmailModal ? 'block' : 'fadeOutUp hidden'
+        }`}
+      >
+        <VerifyEmailModal />
+      </div>
+      <div
         className={`nodrag ${
-          currentStep > 7 ? 'fadeInUp' : 'fadeOutUp hidden'
+          currentStep === 7 || (currentStep > 8 && !verifyDeviceModal)
+            ? 'fadeInUp'
+            : 'fadeOutUp hidden'
         } flex absolute bottom-0 w-full max-h-16]`}
       >
         <BottomNavbar onSendMessage={handleSendMessage} disableIcons />
