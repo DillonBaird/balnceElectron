@@ -49,7 +49,7 @@ function WalletPage() {
       .map((wallet) => (
         <div
           key={wallet.id}
-          className={`tile animated items-center justify-between p-6 mb-6 bg-gray-800 rounded-3xl bg-gradient-to-tr from-gray-700 bg-opacity-50 ${
+          className={`scrollIn items-center justify-between p-6 mb-6 bg-gray-800 rounded-3xl bg-gradient-to-tr from-gray-700 bg-opacity-50 ${
             wallet.type === "mastercard" ? "bg-yellow-300" : ""
           }${wallet.type === "metamask" ? "bg-orange-600" : ""}`}
         >

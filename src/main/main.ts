@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint global-require: off, no-console: off, promise/always-return: off */
 
 /**
@@ -14,6 +15,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { llmRouter } from './llmRouter';
 
 class AppUpdater {
   constructor() {
@@ -25,12 +27,55 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `${pingPong}`;
-  console.log(msgTemplate(arg));
-  setTimeout(() => {
-    event.reply('ipc-example', msgTemplate('pong'));
+(async () => {
+  const response = await llmRouter.cloud.openAIcompletion(
+    'What is the weather like today?',
+  );
+  console.log(response);
+
+  const localResponse = await llmRouter.local.llamaCpp(
+    'Translate this text to French.',
+  );
+  console.log(localResponse);
+
+  const mockResponse = await llmRouter.mock.randomResponse('Tell me a joke.');
+  console.log(mockResponse);
+})();
+
+const aiMsgReply = (event, arg) => {
+  console.log(`Incomming message: ${arg.messages[0].content.text}`);
+  const incomingMessage = arg;
+  setTimeout(async () => {
+    const replyMessageContent = await llmRouter.mock.randomResponse(
+      arg.messages[0].content.text,
+    );
+
+    // Create the reply message following the JSON schema
+    const replyMessage = {
+      conversation_id: incomingMessage.conversation_id,
+      messages: [
+        {
+          message_id: String(new Date().getTime()),
+          timestamp: new Date().toISOString(),
+          sender: {
+            id: 'ai_001',
+            type: 'ai',
+          },
+          content: {
+            type: 'text',
+            text: replyMessageContent,
+          },
+        },
+      ],
+    };
+
+    event.reply('ipc-example', replyMessage);
+    console.log(`Replied message: ${replyMessageContent}`);
   }, 1000);
+};
+
+ipcMain.on('ipc-example', async (event, arg) => {
+  aiMsgReply(event, arg);
 });
 
 if (process.env.NODE_ENV === 'production') {

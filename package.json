@@ -101,6 +101,8 @@
     "electron-log": "^4.4.8",
     "electron-updater": "^6.1.4",
     "lodash": "^4.17.21",
+    "node-llama-cpp": "^2.8.11",
+    "openai": "^4.47.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",

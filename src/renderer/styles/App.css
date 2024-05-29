@@ -497,3 +497,30 @@ opacity: 0;
 .fadeOutUp {
   animation: fadeOutUp .2s forwards;
 }
+
+@keyframes scale-a-lil {
+  from {
+    /* scale: .95; */
+    opacity: 0.025;
+    transform: translateY(120px);
+    filter: blur(5px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scrollIn {
+    animation: scale-a-lil ease-in-out both;
+    animation-timeline: view();
+    animation-range: 2vh 20vh;
+  }
+  .scrollInBig {
+    animation: scale-a-lil ease-in-out both;
+    animation-timeline: view();
+    animation-range: 10vh 30vh;
+  }
+  .scrollInMessage {
+    animation: scale-a-lil ease-in-out both;
+    animation-timeline: view();
+    animation-range: 0vh 6vh;
+  }
+}

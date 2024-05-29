@@ -33,7 +33,7 @@ const appData: AppData = {
     { to: "/messaging", src: messagingIcon, label: "Messaging" },
     { to: "/apps", src: graph, label: "Personal Graph" },
     { to: "/apps", src: group, label: "Contacts & Groups" },
-    { to: "/chat", src: security, label: "Security & Protection" },
+    { to: "/apps", src: security, label: "Security & Protection" },
   ],
   Thrive: [
     { to: "/apps", src: commerce, label: "Commerce" },
@@ -52,7 +52,7 @@ const appData: AppData = {
     { to: "/settings", src: lockIcon, label: "Settings" },
   ],
   Beta: [
-    { to: "/examples/openaichat", src: messagingIcon, label: "OpenAI Chat" },
+    { to: "/chat", src: messagingIcon, label: "Example Chat" },
   ],
 };
 
@@ -66,7 +66,7 @@ function NavigationSection({ title, items, bgClass }: NavigationSectionProps) {
   return (
     <div className="mb-8">
       <h2 className="fadeIn text-xl mb-4">{title}</h2>
-      <div className="grid grid-cols-4 lg:grid-cols-7 gap-3">
+      <div className="scrollIn grid grid-cols-4 lg:grid-cols-7 gap-3">
         {items.map((item, index) => (
           <Link
             key={index}
@@ -106,11 +106,11 @@ function Navigation() {
           items={appData.Self}
           bgClass="bg-green-900"
         />
-        {/* <NavigationSection
+        <NavigationSection
           title="Beta"
           items={appData.Beta}
           bgClass="bg-red-900"
-        /> */}
+        />
       </div>
     </div>
   );

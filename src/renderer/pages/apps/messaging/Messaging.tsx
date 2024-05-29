@@ -187,7 +187,7 @@ function Navigation() {
               >
                 <div
                   ref={messageRefs[msg.id]}
-                  className="flex items-center space-x-4 mb-4 hover:bg-gray-900 py-2 px-3 rounded-2xl cursor-pointer"
+                  className="scrollIn flex items-center space-x-4 mb-4 hover:bg-gray-900 py-2 px-3 rounded-2xl cursor-pointer"
                 >
                   <img draggable="false"
                     src={msg.avatar}

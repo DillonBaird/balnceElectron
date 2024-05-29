@@ -467,14 +467,14 @@ function NetworkPage() {
           </div>
         </div>
         <div className="py-1 nodrag">
-          <h2 className="text-xl pl-16 font-medium mt-4">Goals</h2>
+          <h2 className="scrollInBig text-xl pl-16 font-medium mt-4">Goals</h2>
           <Link
             to="/contracts"
-            className="float-right -mt-4 text-xs pr-6 fadeIn mr-8"
+            className="scrollInBig float-right -mt-4 text-xs pr-6 fadeIn mr-8"
           >
             View All
           </Link>
-          <div className="flex overflow-x-scroll pb-2 hide-scroll-bar w-full">
+          <div className="scrollInBig flex overflow-x-scroll pb-2 hide-scroll-bar w-full">
             <div className="flex flex-nowrap">
               {data.goals.map((goal, index) => (
                 <GoalItem key={index} {...goal} index={index} />
@@ -483,10 +483,10 @@ function NetworkPage() {
           </div>
         </div>
         <div className="py-1 nodrag">
-          <h2 className="text-xl pl-16 font-medium mt-4">
+          <h2 className="scrollInBig text-xl pl-16 font-medium mt-4">
             Local Opportunities
           </h2>
-          <div className="mx-6 rounded-3xl block bg-gradient-to-r from-gray-500 bg-gray-700 p-px my-6 ml-14">
+          <div className="scrollInBig mx-6 rounded-3xl block bg-gradient-to-r from-gray-500 bg-gray-700 p-px my-6 ml-14">
             <div className="flex rounded-3xl p-6 bg-gradient-to-l from-slate-900 bg-gray-800 text-sm leading-6">
               <div className="border rounded-full p-2 w-10 h-10 m-0 mr-4 mt-1 border-px border-gray-500">
                 <img
@@ -505,7 +505,7 @@ function NetworkPage() {
               </div>
             </div>
           </div>
-          <div className="flex overflow-x-scroll pb-2 hide-scroll-bar w-full">
+          <div className="scrollInBig flex overflow-x-scroll pb-2 hide-scroll-bar w-full">
             <div className="flex flex-nowrap">
               {data.opportunities.map((opportunity, index) => (
                 <OpportunityItem key={index} {...opportunity} index={index} />
@@ -514,8 +514,8 @@ function NetworkPage() {
           </div>
         </div>
         <div className="py-1 nodrag">
-          <h2 className="text-xl pl-16 font-medium mt-4">Connections</h2>
-          <div className="flex overflow-x-scroll pb-2 hide-scroll-bar w-full">
+          <h2 className="scrollInBig text-xl pl-16 font-medium mt-4">Connections</h2>
+          <div className="scrollInBig flex overflow-x-scroll pb-2 hide-scroll-bar w-full">
             <div className="flex flex-nowrap">
               {data.connections.map((connection, index) => (
                 <ConnectionItem key={index} {...connection} index={index} />

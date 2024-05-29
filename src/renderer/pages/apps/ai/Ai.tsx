@@ -186,7 +186,7 @@ function Ai() {
             return (
               <div
                 key={index}
-                className={`tile animated ${tile.bgColor} p-6 rounded-3xl transition-all group ease-in-out cursor-pointer border-px border border-black hover:border-gray-700 hover:transform`}
+                className={`scrollInBig tile animated ${tile.bgColor} p-6 rounded-3xl transition-all group ease-in-out cursor-pointer border-px border border-black hover:border-gray-700 hover:transform`}
               >
                 {tile.type === "calendar" ? (
                   <>
