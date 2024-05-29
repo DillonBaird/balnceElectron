@@ -26,6 +26,8 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     "Welcome, I'd love to know your name",
     'Sign up mode activated',
     'Sign up mode activated',
+    'Create Your Secure Digital Twin',
+    'Create Your Secure Digital Twin',
   ];
 
   // interface Actions {
@@ -51,6 +53,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   const [verifyEmailModal, setVerifyEmailModal] = useState(false);
   const [verifyCodeSent, setVerifyCodeSent] = useState(false);
   const [deviceVerified, setDeviceVerified] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -63,7 +66,12 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     if (currentStep === 8) {
       setMessageFeed([]);
     }
-    if (currentStep === 6 || currentStep === 7 || currentStep > 8) {
+    if (
+      currentStep === 6 ||
+      currentStep === 7 ||
+      currentStep === 9 ||
+      currentStep > 10
+    ) {
       return;
     }
     setAnimate(true);
@@ -77,7 +85,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   type Action = {
     onClick: MouseEventHandler<HTMLButtonElement> | undefined;
     title: string;
-    url: string;
+    success: boolean;
   };
 
   // Define the type for message content
@@ -231,12 +239,9 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     const handleIpcExample = (arg: {
       messages: { content: { text: any } }[];
     }) => {
-      console.log(arg.messages[0].content.text);
       const result = extractMetaNameAndCleanString(
         arg.messages[0].content.text,
       );
-      console.log(result.name);
-      console.log(result.cleanedString);
       const postMsg: Message = {
         avatarSrc: '',
         source: 'ai',
@@ -246,7 +251,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
       setMessageFeed((prevMessageFeed) => [...prevMessageFeed, postMsg]);
 
       if (result.name) {
-        setMyName(result.name);
+        setMyName(result.name.charAt(0).toUpperCase() + result.name.slice(1));
         setTimeout(() => {
           // Initial message
           appendToRecentAiMessage(aiMsg);
@@ -300,7 +305,13 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     const aiMsg3: MessageContent = {
       content:
         "Now add your email address, and all of your other preferences, settings and permissions will be created once you're in.",
-      actions: [{ title: 'Add your email', onClick: handleClickEmailVerify }],
+      actions: [
+        {
+          title: 'Add my email',
+          onClick: handleClickEmailVerify,
+          success: emailVerified,
+        },
+      ],
     };
 
     setTimeout(() => {
@@ -309,6 +320,54 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
         appendToRecentAiMessage(aiMsg3);
       }, 500);
     }, 800);
+  };
+
+  const handleEmailVerified = () => {
+    const copyMsgFeed = [...messageFeed];
+    copyMsgFeed.pop();
+    setMessageFeed(copyMsgFeed);
+    setEmailVerified(true);
+    // handleDeviceVerified();
+    const aiMsg2: MessageContent = {
+      content: 'Device registered and verified.',
+    };
+    const aiMsg3: MessageContent = {
+      content:
+        "Now add your email address, and all of your other preferences, settings and permissions will be created once you're in.",
+      actions: [
+        {
+          title: 'Add your email',
+          onClick: handleClickEmailVerify,
+          success: true,
+        },
+      ],
+    };
+
+    appendToRecentAiMessage(aiMsg2);
+    appendToRecentAiMessage(aiMsg3);
+    setTimeout(() => {
+      setVerifyEmailModal(false);
+      setTimeout(() => {
+        setMessageFeed([]);
+        setCurrentStep(10);
+      }, 1200);
+    }, 500);
+
+    // const aiMsg2: MessageContent = {
+    //   content: 'Device registered and verified.',
+    // };
+    // const aiMsg3: MessageContent = {
+    //   content:
+    //     "Now add your email address, and all of your other preferences, settings and permissions will be created once you're in.",
+    //   actions: [{ title: 'Add your email', onClick: handleClickEmailVerify }],
+    // };
+
+    // setTimeout(() => {
+    //   appendToRecentAiMessage(aiMsg2);
+    //   setTimeout(() => {
+    //     appendToRecentAiMessage(aiMsg3);
+    //   }, 500);
+    // }, 800);
   };
 
   const handleClickEmailVerify = () => {
@@ -458,7 +517,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                 Resend code
               </button>
               <button
-                onClick={handleDeviceVerified}
+                onClick={handleEmailVerified}
                 className="text-base text-green-800 m-6 bg-transparent"
               >
                 Simulate verify
@@ -489,7 +548,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   return (
     <div
       className={`nodrag w-full h-screen mt-10 ${
-        currentStep !== 6 && currentStep !== 7 && currentStep < 9
+        currentStep !== 6 && currentStep !== 7 && currentStep < 11
           ? 'cursor-pointer'
           : ''
       }`}
@@ -497,7 +556,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     >
       <div
         className={`flex max-w-lg mx-auto w-full ${
-          currentStep === 7 || currentStep > 8
+          currentStep === 7 || currentStep === 9 || currentStep > 10
             ? 'min-h-0 flex-col pr-10'
             : 'flex-col'
         }`}
@@ -508,15 +567,19 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
         >
           <div
             className={`flex fadeInUp items-center justify-center align-center px-6 transition-all ${
-              currentStep === 7 || currentStep > 8
+              currentStep === 7 || currentStep === 9 || currentStep > 10
                 ? '-ml-8 flex-row'
                 : 'min-h-screen flex-col'
             }`}
           >
             <div
               className={`${
-                currentStep === 7 || currentStep > 8 ? 'scale-50' : 'scale-150'
-              } ${currentStep > 8 ? '-mt-36' : '-mt-6'} transform-gpu`}
+                currentStep === 7 || currentStep === 9 || currentStep > 10
+                  ? 'scale-50'
+                  : 'scale-150'
+              } ${
+                currentStep === 9 ? '-mt-36' : currentStep === 11 ? '-mt-56' : '-mt-6'
+              } transform-gpu`}
             >
               <div className="rainbow-container bg-gradient-to-tr from-gray-900 bg-blue-900 animate transition-all duration-100 mb-12 absolute">
                 <div className="green" />
@@ -526,20 +589,29 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
             </div>
             <h1
               className={`${
-                currentStep === 7 || currentStep > 8
+                currentStep === 7 || currentStep === 9 || currentStep > 10
                   ? 'text-xl leading-0 font-semibold mt-2'
-                  : 'text-4xl h-64'
+                  : 'text-4xl h-64 text-center'
               } ${animate ? 'fadeOutUp' : 'fadeInUp'} mb-1`}
             >
               {titles[currentStep]}
               <div
                 className={`inline-block w-full text-sm text-gray-100 font-thin tracking-wide mt-2 ${
-                  currentStep === 7 || currentStep > 8
+                  currentStep === 7 || currentStep === 9 || currentStep > 10
                     ? 'fadeInUp delay-1000'
                     : 'hidden'
                 }`}
               >
-                {currentStep > 8 ? (
+                {currentStep < 9 ? (
+                  <>
+                    So i don't have to call you a user, which is impersonal, and
+                    a bit rude of me. And no wrries, you can always tell me to
+                    call you something else later.
+                  </>
+                ) : (
+                  <></>
+                )}
+                {currentStep === 9 ? (
                   <>
                     {myName}, you will never regret taking this leap into the
                     future economy with us. <br />
@@ -568,10 +640,30 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                   </>
                 ) : (
                   <>
-                    So i don't have to call you a user, which is impersonal, and
-                    a bit rude of me. And no wrries, you can always tell me to
-                    call you something else later.
                   </>
+                )}
+                {currentStep === 11 ? (
+                  <>
+                    Passwords no longer work, {myName}!
+                    <br />
+                    <br />
+                    The most secure way to login, protect your data and prove your identity is to create a digital twin with biometric signatures, like your facial expressions, which cannot be faked or duplicated.
+                    <br />
+                    <br />
+                    And, you get to pewrsonalize your new superpower endowed guardian with a name.
+                    <br />
+                    <br />
+                    <div className="w-96">
+                      <button
+                        onClick={handleAvatarDemoClick}
+                        className={`rounded-full text-sm w-full font-semibold mt-2 py-4 bg-gradient-to-tl from-purple-900 bg-blue-900`}
+                      >
+                        Activate Experience
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <></>
                 )}
               </div>
             </h1>
@@ -617,14 +709,16 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
           {messageFeed.map((item, index) => (
             <div
               className={`${
-                currentStep === 7 || currentStep > 8 ? '' : 'hidden'
+                currentStep === 7 || currentStep === 9 || currentStep > 10
+                  ? ''
+                  : 'hidden'
               } flex scrollInChat flex-col`}
               key={index}
             >
               <div className="flex pt-6 text-sm text-gray-100 font-thin tracking-wide">
                 <div
                   className={`h-full${
-                    currentStep === 7 || currentStep > 8
+                    currentStep === 7 || currentStep === 9 || currentStep > 10
                       ? 'scale-50'
                       : 'scale-150'
                   } transform-gpu`}
@@ -650,8 +744,14 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                             <div key={index} className="w-11/12">
                               <button
                                 onClick={actionItem.onClick}
-                                className="rounded-full text-sm w-full bg-gradient-to-tl from-purple-900 bg-blue-900 mt-2 py-4"
+                                disabled={actionItem.success}
+                                className={`rounded-full text-sm w-full mt-2 py-4 ${
+                                  actionItem.success
+                                    ? 'bg-gradient-to-tl from-green-400 bg-green-800'
+                                    : 'bg-gradient-to-tl from-purple-900 bg-blue-900'
+                                }`}
                               >
+                                {actionItem.success ? '✓  ' : ''}
                                 {actionItem.title}
                               </button>
                             </div>
@@ -686,7 +786,9 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
       </div>
       <div
         className={`nodrag ${
-          currentStep === 7 || (currentStep > 8 && !verifyDeviceModal)
+          currentStep === 7 ||
+          currentStep === 9 ||
+          (currentStep > 10 && !verifyDeviceModal)
             ? 'fadeInUp'
             : 'fadeOutUp hidden'
         } flex absolute bottom-0 w-full max-h-16]`}
