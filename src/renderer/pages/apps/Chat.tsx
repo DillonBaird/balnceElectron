@@ -9,6 +9,7 @@ function Chat() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const handleSend = () => {
+    const promptTemplate = `Imagine that you are a user onboarding wizard for an app called Balnce. You just asked the user for their name (first name) or said they can ask any question about Balnce. If they provide a name, respond with 'Hey {name}! It's nice to meet you. Let's get you signed up! {{ <action url="/apps">}}Sign Up{{</action>}}'. If they ask a question about Balnce, respond with the answer. If they ask anything else, be friendly and tell the user you're sorry but can't help with that and to please provide their name or ask a question about Balnce.', be annoyed/sassy if they keep doing it. User Input: "${input}"`;
     if (input) {
       const userMessage = {
         conversation_id: '12345',
@@ -29,6 +30,7 @@ function Chat() {
       };
 
       setMessages([...messages, JSON.stringify(userMessage)]);
+      userMessage.messages[0].content.text = promptTemplate;
       window.electron.ipcRenderer.sendMessage('ipc-example', userMessage);
       setInput('');
     }

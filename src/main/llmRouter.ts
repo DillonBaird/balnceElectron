@@ -1,10 +1,14 @@
+/* eslint-disable camelcase */
 /* eslint-disable import/prefer-default-export */
-// llmRouter.ts
 import OpenAI from 'openai';
+import {
+  GoogleGenerativeAI,
+  HarmCategory,
+  HarmBlockThreshold,
+} from '@google/generative-ai';
+import dotenv from 'dotenv';
 
-const openai = new OpenAI({
-  apiKey: '',
-});
+dotenv.config();
 
 type LLMResponse = Promise<string>;
 
@@ -12,7 +16,7 @@ interface LLMS {
   openAIcompletion: (
     prompt: string,
   ) => Promise<OpenAI.Chat.Completions.ChatCompletion.Choice>;
-  googleGemini: (prompt: string) => LLMResponse;
+  googleGemini: (prompt: string) => Promise<string>;
   llamaCpp: (prompt: string) => LLMResponse;
   transformers: (prompt: string) => LLMResponse;
   wasmPackage: (prompt: string) => LLMResponse;
@@ -22,21 +26,57 @@ interface LLMS {
 
 const cloudLLMs: Partial<LLMS> = {
   openAIcompletion: async (prompt: string) => {
-    // Implementation for calling OpenAI API
-    console.log(prompt);
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const openai = new OpenAI({ apiKey: openaiApiKey });
+
     const completion = await openai.chat.completions.create({
-      // messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
       messages: [{ role: 'system', content: prompt }],
       model: 'gpt-3.5-turbo',
     });
-    console.log(completion.choices[0]);
     return completion.choices[0];
   },
   googleGemini: async (prompt: string) => {
-    // Implementation for calling Google Gemini API
-    return `Google Gemini response for: ${prompt}`;
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const googleAI = new GoogleGenerativeAI(geminiApiKey);
+    const geminiConfig = {
+      temperature: 0.9,
+      topP: 1,
+      topK: 1,
+      maxOutputTokens: 2048,
+    };
+
+    const safetySettings = [
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+      },
+    ];
+
+    try {
+      const geminiModel = googleAI.getGenerativeModel({
+        model: 'gemini-pro',
+        geminiConfig,
+        safetySettings,
+      });
+      const result = await geminiModel.generateContent(prompt);
+      return result.response.text();
+    } catch (error) {
+      console.error('Google Gemini response error', error);
+      throw new Error('Failed to get response from Google Gemini');
+    }
   },
-  // Add more cloud-based LLMs as needed
 };
 
 const localLLMs: Partial<LLMS> = {
@@ -52,44 +92,37 @@ const localLLMs: Partial<LLMS> = {
     // Implementation for calling local WASM package LLM
     return `WASM package response for: ${prompt}`;
   },
-  // Add more local LLMs as needed
 };
 
 const mockLLMs: Partial<LLMS> = {
   randomResponse: async (prompt: string) => {
-    // Mock implementation returning a random response
     const responses = ['Response A', 'Response B', 'Response C'];
     return responses[Math.floor(Math.random() * responses.length)];
   },
   onboardChat: async (prompt: string) => {
-    // Mock implementation for onboarding chat
     return `Onboard chat response for: ${prompt}`;
   },
-  // Add more mock LLMs as needed
 };
 
 export const llmRouter = {
   cloud: {
     openAIcompletion: cloudLLMs.openAIcompletion!,
     googleGemini: cloudLLMs.googleGemini!,
-    // Add more cloud-based LLM methods as needed
   },
   local: {
     llamaCpp: localLLMs.llamaCpp!,
     transformers: localLLMs.transformers!,
     wasmPackage: localLLMs.wasmPackage!,
-    // Add more local LLM methods as needed
   },
   mock: {
     randomResponse: mockLLMs.randomResponse!,
     onboardChat: mockLLMs.onboardChat!,
-    // Add more mock LLM methods as needed
   },
 };
 
 // Usage example
 // (async () => {
-//   const response = await llmRouter.cloud.openAI(
+//   const response = await llmRouter.cloud.openAIcompletion(
 //     'What is the weather like today?',
 //   );
 //   console.log(response);

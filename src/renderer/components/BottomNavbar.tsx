@@ -89,7 +89,7 @@ const BottomNavbar: React.FC<BottomNavbarProps> = ({
                 } text-left bg-transparent outline-none`}
               />
               <div className="flex flex-col items-center text-white nodrag mr-2">
-                <button onClick={handleSendClick} className="p-4 text-xs tracking-wider">
+                <button onClick={handleSendClick} className="bg-transparent p-4 text-xs tracking-wider">
                   SEND
                 </button>
               </div>

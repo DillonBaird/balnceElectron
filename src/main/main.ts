@@ -27,51 +27,34 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-(async () => {
-  const response = await llmRouter.cloud.openAIcompletion(
-    'What is the weather like today?',
-  );
-  console.log(response);
-
-  const localResponse = await llmRouter.local.llamaCpp(
-    'Translate this text to French.',
-  );
-  console.log(localResponse);
-
-  const mockResponse = await llmRouter.mock.randomResponse('Tell me a joke.');
-  console.log(mockResponse);
-})();
-
-const aiMsgReply = (event, arg) => {
+const aiMsgReply = async (event, arg) => {
   console.log(`Incomming message: ${arg.messages[0].content.text}`);
   const incomingMessage = arg;
-  setTimeout(async () => {
-    const replyMessageContent = await llmRouter.mock.randomResponse(
-      arg.messages[0].content.text,
-    );
+  const replyMessageContent = await llmRouter.cloud.googleGemini(
+    arg.messages[0].content.text,
+  );
 
-    // Create the reply message following the JSON schema
-    const replyMessage = {
-      conversation_id: incomingMessage.conversation_id,
-      messages: [
-        {
-          message_id: String(new Date().getTime()),
-          timestamp: new Date().toISOString(),
-          sender: {
-            id: 'ai_001',
-            type: 'ai',
-          },
-          content: {
-            type: 'text',
-            text: replyMessageContent,
-          },
+  // Create the reply message following the JSON schema
+  const replyMessage = {
+    conversation_id: incomingMessage.conversation_id,
+    messages: [
+      {
+        message_id: String(new Date().getTime()),
+        timestamp: new Date().toISOString(),
+        sender: {
+          id: 'ai_001',
+          type: 'ai',
         },
-      ],
-    };
+        content: {
+          type: 'text',
+          text: replyMessageContent,
+        },
+      },
+    ],
+  };
 
-    event.reply('ipc-example', replyMessage);
-    console.log(`Replied message: ${replyMessageContent}`);
-  }, 1000);
+  event.reply('ipc-example', replyMessage);
+  console.log(`Replied message: ${replyMessageContent}`);
 };
 
 ipcMain.on('ipc-example', async (event, arg) => {
@@ -170,9 +153,10 @@ const createWindow = async () => {
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // if (process.platform !== 'darwin') {
+  //   app.quit();
+  // }
+  app.quit();
 });
 
 app
