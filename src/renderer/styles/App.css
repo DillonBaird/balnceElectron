@@ -526,6 +526,6 @@ opacity: 0;
   .scrollInChat {
     animation: scale-a-lil ease-in-out both;
     animation-timeline: view();
-    animation-range: 10vh 10vh;
+    animation-range: 5vh 10vh;
   }
 }

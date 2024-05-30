@@ -4,11 +4,13 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/button-has-type */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { MouseEventHandler, useEffect, useRef, useState } from 'react';
+import Webcam from 'react-webcam';
 import { useAuth } from '../../../context/AuthContext';
 import BottomNavbar from '../../../components/BottomNavbar';
 import faceIcon from '../../../../../assets/face.png';
 import backIcon from '../../../../../assets/backIcon.png';
+import faceIDIcon from '../../../../../assets/faceID.png';
 
 interface WelcomeSignUpProps {
   onStepChange: (step: number) => void;
@@ -49,6 +51,8 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   const [messageFeed, setMessageFeed] = useState<Message[]>([]);
   const [shownAiReply, setShownAiReply] = useState(false);
   const [myName, setMyName] = useState('');
+  const [digitalTwinModal, setDigitalTwinModal] = useState(false);
+  const [digitalTwinStep, setDigitalTwinStep] = useState(1);
   const [verifyDeviceModal, setVerifyDeviceModal] = useState(false);
   const [verifyEmailModal, setVerifyEmailModal] = useState(false);
   const [verifyCodeSent, setVerifyCodeSent] = useState(false);
@@ -86,6 +90,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     onClick: MouseEventHandler<HTMLButtonElement> | undefined;
     title: string;
     success: boolean;
+    style?: string;
   };
 
   // Define the type for message content
@@ -103,6 +108,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
 
   const handleAvatarDemoClick = () => {
     console.log('avatar demo click');
+    setDigitalTwinModal(true);
   };
 
   const handleSignUpClick = () => {
@@ -111,6 +117,10 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
       setAnimate(false);
       setCurrentStep(8);
     }, 300); // Duration of the animation
+  };
+
+  const handleStartScanClick = () => {
+    setDigitalTwinStep(2);
   };
 
   const handleVerifyDeviceClick = () => {
@@ -123,6 +133,11 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     setVerifyDeviceModal(false);
     setVerifyEmailModal(false);
     setVerifyCodeSent(false);
+  };
+
+  const handleDigitalTwinBackClick = () => {
+    setDigitalTwinModal(false);
+    setDigitalTwinStep(1);
   };
 
   const handleStartClick = () => {
@@ -218,11 +233,15 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   const appendToRecentAiMessage = (messageContent: MessageContent) => {
     setMessageFeed((prevMessageFeed) => {
       const newMessageFeed = [...prevMessageFeed];
+      const lastMessage = newMessageFeed[newMessageFeed.length - 1];
+      const lastContent = lastMessage?.content[lastMessage.content.length - 1];
+      const lastContetHasActions = !!lastContent?.actions;
       if (
         newMessageFeed.length > 0 &&
-        newMessageFeed[newMessageFeed.length - 1].source === 'ai'
+        lastMessage.source === 'ai' &&
+        !lastContetHasActions
       ) {
-        newMessageFeed[newMessageFeed.length - 1].content.push(messageContent);
+        lastMessage.content.push(messageContent);
       } else {
         const newAiMsg: Message = {
           avatarSrc: '',
@@ -545,6 +564,284 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     );
   };
 
+  const videoConstraints = {
+    width: 720,
+    height: 720,
+    facingMode: 'user',
+  };
+
+  const handleSecondScan = () => {
+    setDigitalTwinModal(true);
+  };
+
+  const handleThirdScan = () => {
+    setDigitalTwinModal(true);
+  };
+
+  const handleFirstDTCapture = () => {
+    setDigitalTwinStep(3);
+    setDigitalTwinModal(false);
+    const aiMsg1: MessageContent = {
+      content:
+        "Awesome job, you've captured the first facial signature of your digital twin.",
+    };
+    const aiMsg2: MessageContent = {
+      content:
+        "Now let's grab your second set of facial signatures, and this time you'll be showing us some emotions.",
+    };
+    const aiMsg3: MessageContent = {
+      content:
+        'Emotional gestures are like fingerprints, no two are exactly alike.',
+      actions: [
+        {
+          title: 'Second scan',
+          onClick: handleSecondScan,
+          success: false,
+          style: 'bg-gradient-to-br from-gray-900 bg-black',
+        },
+      ],
+    };
+
+    appendToRecentAiMessage(aiMsg1);
+    setTimeout(() => {
+      appendToRecentAiMessage(aiMsg2);
+      setTimeout(() => {
+        appendToRecentAiMessage(aiMsg3);
+      }, 1200);
+    }, 500);
+  };
+
+  const handleSecondDTCapture = () => {
+    const copyMsgFeed = [...messageFeed];
+    copyMsgFeed.pop();
+    setMessageFeed(copyMsgFeed);
+    setDigitalTwinStep(4);
+
+
+    const aiMsg11: MessageContent = {
+      content:
+        "Awesome job, you've captured the first facial signature of your digital twin.",
+    };
+    const aiMsg12: MessageContent = {
+      content:
+        "Now let's grab your second set of facial signatures, and this time you'll be showing us some emotions.",
+    };
+    const aiMsg13: MessageContent = {
+      content:
+        'Emotional gestures are like fingerprints, no two are exactly alike.',
+      actions: [
+        {
+          title: 'Second scan',
+          onClick: handleSecondScan,
+          success: true,
+          style: 'bg-gradient-to-br from-gray-900 bg-black',
+        },
+      ],
+    };
+    appendToRecentAiMessage(aiMsg11);
+    appendToRecentAiMessage(aiMsg12);
+    appendToRecentAiMessage(aiMsg13);
+
+    setTimeout(() => {
+      setDigitalTwinModal(false);
+      const aiMsg1: MessageContent = {
+        content: "Boom, you're cooking now.",
+      };
+      const aiMsg2: MessageContent = {
+        content:
+          "This last step will complete the facial signature, and then we'll be able to create your unique, biometrically generated digital twin.",
+        actions: [
+          {
+            title: 'Third scan',
+            onClick: handleThirdScan,
+            success: false,
+            style: 'bg-gradient-to-br from-gray-900 bg-black',
+          },
+        ],
+      };
+
+      appendToRecentAiMessage(aiMsg1);
+      setTimeout(() => {
+        appendToRecentAiMessage(aiMsg2);
+      }, 500);
+    }, 1000);
+  };
+
+  const handleThirdDTCapture = () => {
+    const copyMsgFeed = [...messageFeed];
+    copyMsgFeed.pop();
+    setMessageFeed(copyMsgFeed);
+    // setDigitalTwinStep(5);
+
+    const aiMsg11: MessageContent = {
+      content: "Boom, you're cooking now.",
+    };
+    const aiMsg12: MessageContent = {
+      content:
+        "This last step will complete the facial signature, and then we'll be able to create your unique, biometrically generated digital twin.",
+      actions: [
+        {
+          title: 'Third scan',
+          onClick: handleThirdScan,
+          success: true,
+          style: 'bg-gradient-to-br from-gray-900 bg-black',
+        },
+      ],
+    };
+    appendToRecentAiMessage(aiMsg11);
+    appendToRecentAiMessage(aiMsg12);
+
+    setTimeout(() => {
+      setDigitalTwinModal(false);
+      const aiMsg1: MessageContent = {
+        content: `Dang ${myName} that was a great face.`,
+      };
+      const aiMsg2: MessageContent = {
+        content: "We're about to complete the process and use some advanced mathematical stuff, but there's a quick formality.",
+      };
+      const aiMsg3: MessageContent = {
+        content:
+          "This information is not stored, transmitted or sold by Balnce Ai for any reason. Creating an account means you agree with the Terms and Conditions",
+        actions: [
+          {
+            title: 'Agree',
+            onClick: handleThirdScan,
+            success: false,
+            style: 'bg-gradient-to-br from-gray-900 bg-black',
+          },
+          {
+            title: 'Disagree',
+            onClick: handleThirdScan,
+            success: false,
+            style: 'bg-transparent',
+          },
+        ],
+      };
+
+      appendToRecentAiMessage(aiMsg1);
+      setTimeout(() => {
+        appendToRecentAiMessage(aiMsg2);
+        setTimeout(() => {
+          appendToRecentAiMessage(aiMsg3);
+        }, 500);
+      }, 500);
+    }, 1000);
+  };
+
+  const DigitalTwinModal = () => {
+    return (
+      <div className="bg-gradient-to-b via-black from-gray-900 bg-black p-6 block h-screen w-full max-w-lg mx-auto text-xl text-white">
+        <div
+          className="mt-4 nodrag rounded-full border border-gray-600 hover:border-gray-500 hover:bg-gray-800 transition-all w-10 h-10 mx-0 p-3 inline-block fadeIn cursor-pointer"
+          onClick={handleDigitalTwinBackClick}
+        >
+          <img draggable="false" src={backIcon} className="" alt="Back" />
+        </div>
+
+        <div
+          className={`float-right mt-6 pt-1 text-base ${
+            emailVerified ? 'hidden' : ''
+          }`}
+        >
+          Sign Up
+        </div>
+        <div className="flex flex-col w-full items-center mt-16">
+          <div
+            className={`border-4 border-dashed rounded-full fadeInUp w-64 h-64 mb-12 bg-center bg-cover bg-[url('${faceIDIcon}')]`}
+          >
+            <div
+              className={`w-full h-full object-cover rounded-full overflow-hidden -scale-x-100 ${
+                digitalTwinStep === 2 || digitalTwinStep === 3 || digitalTwinStep === 4 ? '' : 'hidden'
+              }`}
+            >
+              {digitalTwinStep === 2 || digitalTwinStep === 3 || digitalTwinStep === 4 ? (
+                <Webcam videoConstraints={videoConstraints} />
+              ) : (
+                <></>
+              )}
+            </div>
+            {/* <img src={faceIDIcon} className={`w-32 h-32 m-16  ${digitalTwinStep === 1 ? '' : 'hidden'}`} /> */}
+          </div>
+          {digitalTwinStep === 1 ? (
+            <>
+              <h1 className="text-4xl mx-6 text-center fadeInUp font-semibold">
+                Let's start with building your first expression
+              </h1>
+              <span className="text-xl fadeInUp m-6 text-center">
+                Position your face in the camera frame, then move your head in a
+                circle so we can capture as many angles as possible.
+              </span>
+
+              <button
+                onClick={handleStartScanClick}
+                className="m-5 mt-12 fadeInUp rounded-full text-lg py-4 bg-gradient-to-br from-gray-900 bg-black w-9/12 shadow-2xl shadow-blue-900"
+              >
+                Start scan
+              </button>
+            </>
+          ) : (
+            <></>
+          )}
+          {digitalTwinStep === 2 ? (
+            <>
+              <h1 className="text-4xl mx-6 text-center fadeInUp font-semibold">
+                Let's start with building your first expression
+              </h1>
+              <span className="text-xl fadeInUp m-6 text-center">
+                Hold you camera still and turn your head in a circular motion.
+              </span>
+              <span className="fadeInUp text-4xl">0:05</span>
+              <button
+                onClick={handleFirstDTCapture}
+                className="text-base text-green-800 m-6 bg-transparent"
+              >
+                Simulate capture
+              </button>
+            </>
+          ) : (
+            <></>
+          )}
+          {digitalTwinStep === 3 ? (
+            <>
+              <h1 className="text-4xl mx-6 text-center fadeInUp font-semibold">
+                Facial Signatures:
+                <br />
+                <span className="text-3xl">Give us a smile</span>
+              </h1>
+              <span className="fadeInUp text-4xl mt-4">0:05</span>
+              <button
+                onClick={handleSecondDTCapture}
+                className="text-base text-green-800 m-6 bg-transparent"
+              >
+                Simulate capture
+              </button>
+            </>
+          ) : (
+            <></>
+          )}
+          {digitalTwinStep === 4 ? (
+            <>
+              <h1 className="text-4xl mx-6 text-center fadeInUp font-semibold">
+                A Unique Expression:
+                <br />
+                <span className="text-3xl">Something fun, goofy, and just you.</span>
+              </h1>
+              <span className="fadeInUp text-4xl mt-4">0:05</span>
+              <button
+                onClick={handleThirdDTCapture}
+                className="text-base text-green-800 m-6 bg-transparent"
+              >
+                Simulate capture
+              </button>
+            </>
+          ) : (
+            <></>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className={`nodrag w-full h-screen mt-10 ${
@@ -563,7 +860,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
       >
         <div
           ref={chatContainerRef}
-          className="nodrag overflow-y-auto pb-48 max-w-lg w-full h-screen"
+          className="nodrag overflow-y-auto pb-64 max-w-lg w-full h-screen"
         >
           <div
             className={`flex fadeInUp items-center justify-center align-center px-6 transition-all ${
@@ -578,7 +875,11 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                   ? 'scale-50'
                   : 'scale-150'
               } ${
-                currentStep === 9 ? '-mt-36' : currentStep === 11 ? '-mt-56' : '-mt-6'
+                currentStep === 9
+                  ? '-mt-36'
+                  : currentStep === 11
+                  ? '-mt-56'
+                  : '-mt-6'
               } transform-gpu`}
             >
               <div className="rainbow-container bg-gradient-to-tr from-gray-900 bg-blue-900 animate transition-all duration-100 mb-12 absolute">
@@ -639,26 +940,36 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                     </div>
                   </>
                 ) : (
-                  <>
-                  </>
+                  <></>
                 )}
                 {currentStep === 11 ? (
                   <>
                     Passwords no longer work, {myName}!
                     <br />
                     <br />
-                    The most secure way to login, protect your data and prove your identity is to create a digital twin with biometric signatures, like your facial expressions, which cannot be faked or duplicated.
+                    The most secure way to login, protect your data and prove
+                    your identity is to create a digital twin with biometric
+                    signatures, like your facial expressions, which cannot be
+                    faked or duplicated.
                     <br />
                     <br />
-                    And, you get to pewrsonalize your new superpower endowed guardian with a name.
+                    And, you get to pewrsonalize your new superpower endowed
+                    guardian with a name.
                     <br />
                     <br />
                     <div className="w-96">
                       <button
                         onClick={handleAvatarDemoClick}
-                        className={`rounded-full text-sm w-full font-semibold mt-2 py-4 bg-gradient-to-tl from-purple-900 bg-blue-900`}
+                        disabled={digitalTwinStep > 2}
+                        className={`rounded-full text-sm w-full font-semibold mt-2 py-4 ${
+                          digitalTwinStep > 2
+                            ? 'bg-gradient-to-tl from-green-400 bg-green-800'
+                            : 'bg-gradient-to-tl from-purple-900 bg-blue-900'
+                        }`}
                       >
-                        Activate Experience
+                        {digitalTwinStep > 2
+                          ? '✓  First scan'
+                          : 'Activate Experience'}
                       </button>
                     </div>
                   </>
@@ -715,7 +1026,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
               } flex scrollInChat flex-col`}
               key={index}
             >
-              <div className="flex pt-6 text-sm text-gray-100 font-thin tracking-wide">
+              <div className="flex pt-6 text-sm text-gray-100 tracking-wide">
                 <div
                   className={`h-full${
                     currentStep === 7 || currentStep === 9 || currentStep > 10
@@ -745,10 +1056,10 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                               <button
                                 onClick={actionItem.onClick}
                                 disabled={actionItem.success}
-                                className={`rounded-full text-sm w-full mt-2 py-4 ${
+                                className={`rounded-full text-sm w-full mt-2 py-4 ${actionItem.style ? actionItem.style : 'bg-gradient-to-tl from-purple-900 bg-blue-900'} ${
                                   actionItem.success
                                     ? 'bg-gradient-to-tl from-green-400 bg-green-800'
-                                    : 'bg-gradient-to-tl from-purple-900 bg-blue-900'
+                                    : ''
                                 }`}
                               >
                                 {actionItem.success ? '✓  ' : ''}
@@ -785,10 +1096,17 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
         <VerifyEmailModal />
       </div>
       <div
+        className={`fadeInUp z-50 fixed top-0 left-0 w-full ${
+          digitalTwinModal ? 'block' : 'fadeOutUp hidden'
+        }`}
+      >
+        <DigitalTwinModal />
+      </div>
+      <div
         className={`nodrag ${
-          currentStep === 7 ||
-          currentStep === 9 ||
-          (currentStep > 10 && !verifyDeviceModal)
+          (currentStep === 7 || currentStep === 9 || currentStep > 10) &&
+          !verifyDeviceModal &&
+          !digitalTwinModal
             ? 'fadeInUp'
             : 'fadeOutUp hidden'
         } flex absolute bottom-0 w-full max-h-16]`}
