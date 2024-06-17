@@ -5,12 +5,16 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/button-has-type */
 import React, { MouseEventHandler, useEffect, useRef, useState } from 'react';
+import Markdown from 'markdown-to-jsx';
 import Webcam from 'react-webcam';
 import { useAuth } from '../../../context/AuthContext';
 import BottomNavbar from '../../../components/BottomNavbar';
 import faceIcon from '../../../../../assets/face.png';
 import backIcon from '../../../../../assets/backIcon.png';
 import faceIDIcon from '../../../../../assets/faceID.png';
+import Login from './Login';
+
+import { getPrompt } from '../../../context/PromptContext';
 
 interface WelcomeSignUpProps {
   onStepChange: (step: number) => void;
@@ -28,8 +32,10 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     "Welcome, I'd love to know your name",
     'Sign up mode activated',
     'Sign up mode activated',
-    'Create Your Secure Digital Twin',
-    'Create Your Secure Digital Twin',
+    // 'Create Your Secure Digital Twin',
+    // 'Create Your Secure Digital Twin',
+    'Connect with your favorite brands',
+    'Connect with your favorite brands',
   ];
 
   // interface Actions {
@@ -58,8 +64,12 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
   const [verifyCodeSent, setVerifyCodeSent] = useState(false);
   const [deviceVerified, setDeviceVerified] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [selectedTiles, setSelectedTiles] = useState<string[]>([]);
+
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const { login } = useAuth();
 
   useEffect(() => {
     onStepChange(currentStep);
@@ -188,10 +198,38 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
         };
         newMessageFeed.push(postMsg);
 
-        const promptTemplate = `You are Balnce, an expert hyperpersonalized life-ai and you are onboarding a user in a wizard. You just asked the user for their name (first name) or
-        said they can ask any question about Balnce. Only if they provide a name, respond with '<meta name="{name}" />Hey {name}! It's great to meet you.'.
-        If they ask a question about Balnce, respond with the answer. If they ask anything else, be friendly and tell the user you're sorry but can't help with that and to please provide their name or ask a question about Balnce.', feel free to add some light humor.
-        Blance is a hyperpersonalized life-Ai that utilizes the latest in AI, crypto, and Web3 technologies to automate your life, relationships, and devices. User Input: "${message}"`;
+        let prompt;
+
+        switch (currentStep) {
+          case 11:
+            prompt = getPrompt('onboardingGetName', {
+              basePrompt:
+                'You are onboarding a user in a wizard. You just asked the user for some information about themselves so you can recommend them to some top brands to conect with. For example, if the user likes outdoors activities, one of your recommendations would be North Face. Etc.',
+              canAskQuestions: true,
+              personality:
+                'Feel free to use light humor, have a little fun with them.',
+              ifCriteria:
+                'If they provide information about themself or ask for more recommendations',
+              ifAction: `respond with 9 suggested brands like 'That's awesome! Based on your interests in x, here are a few brands I recommend you check out: <ul class="brandTiles"><li class="brandTile">{brand1}</li><li class="brandTile">{brand2}</li><li class="brandTile">{brand3}</li><li class="brandTile">{brand4}</li><li class="brandTile">{brand5}</li><li class="brandTile">{brand6}</li><li class="brandTile">{brand7}</li><li class="brandTile">{brand8}</li><li class="brandTile">{brand9}</li></ul>'`,
+            });
+            break;
+          default:
+            prompt = getPrompt('onboardingGetName', {
+              basePrompt:
+                'You are onboarding a user in a wizard. You just asked the user for their name (first name) or said they can ask any question about Balnce.',
+              canAskQuestions: true,
+              personality:
+                'Feel free to use light humor, have a little fun with them.',
+              ifCriteria: 'Only if they provide a name',
+              ifAction: `respond with '<meta name="{name}" />Hey {name}! It's great to meet you.'`,
+            });
+            break;
+        }
+
+        const promptTemplate = `${prompt} User Input: "${message}"`;
+
+        console.log(promptTemplate);
+
         const userMessageObj = {
           conversation_id: '12345',
           messages: [
@@ -254,14 +292,22 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     });
   };
 
+  const handleSelectBrandTile = (brandName: string) => {
+    console.log(brandName);
+    setSelectedTiles([...selectedTiles, brandName]);
+    console.log(selectedTiles);
+  };
+
   useEffect(() => {
-    const handleIpcExample = (arg: {
-      messages: { content: { text: any } }[];
+    const handleIpcExample = async (arg: {
+      messages: { content: { text: string } }[];
     }) => {
       const result = extractMetaNameAndCleanString(
         arg.messages[0].content.text,
       );
-      const postMsg: Message = {
+      console.log(arg.messages[0].content.text);
+
+      const postMsg = {
         avatarSrc: '',
         source: 'ai',
         content: [{ content: result.cleanedString }],
@@ -281,6 +327,87 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
           }, 700);
         }, 1000);
       }
+
+      // Process brandTiles
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(result.cleanedString, 'text/html');
+      const brandTiles = doc.querySelectorAll('.brandTile');
+
+      const options = {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          Referer: 'https://example.com/searchIntegrationPage',
+        },
+      };
+
+      const apiOptions = {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          Authorization: 'Bearer TlTX8ifTBJDxcl30gRyb86hbmVnhe/DviV+lyXhc9w4='
+        }
+      };
+
+      for (const tile of Array.from(brandTiles)) {
+        const brandName = tile.textContent?.trim() || '';
+
+        try {
+          const response = await fetch(
+            `https://api.brandfetch.io/v2/search/${encodeURIComponent(
+              brandName,
+            )}`,
+            options,
+          );
+          const brandInfoArray = await response.json();
+
+          if (brandInfoArray.length > 0) {
+            const brandInfo = brandInfoArray[0]; // Use the first result
+            const response = await fetch(`https://api.brandfetch.io/v2/brands/${brandInfo.brandId}`, apiOptions);
+            const brandDetals = await response.json();
+            tile.className = 'brandTile cursor-pointer';
+            if (brandDetals.logos && brandDetals.logos.length > 0) {
+              tile.innerHTML = `
+                <img src="${brandDetals.logos[1].formats[0].src}" alt="${brandName} logo" />
+              `;
+            }
+            else {
+              tile.innerHTML = `
+                <img src="${brandInfo.icon}" alt="${brandName} logo" />
+                <p>${brandName}</p>
+              `;
+            }
+
+            tile.addEventListener('click', () => {
+              console.log(123)
+            });
+
+          } else {
+            tile.innerHTML = `
+              <p>No brand information found</p>
+            `;
+          }
+        } catch (err) {
+          console.error(err);
+          tile.innerHTML = `
+            <p>Error fetching brand information</p>
+          `;
+        }
+      }
+
+      // Update the cleaned string with modified brandTiles
+      const updatedString = doc.body.innerHTML;
+
+      // Update the content of the last message
+      setMessageFeed((prevMessageFeed) => {
+        const updatedFeed = [...prevMessageFeed];
+        const lastMessage = updatedFeed.pop();
+        if (lastMessage) {
+          lastMessage.content[0].content = updatedString;
+          updatedFeed.push(lastMessage);
+        }
+        return updatedFeed;
+      });
     };
 
     window.electron.ipcRenderer.on('ipc-example', handleIpcExample);
@@ -617,7 +744,6 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     setMessageFeed(copyMsgFeed);
     setDigitalTwinStep(4);
 
-
     const aiMsg11: MessageContent = {
       content:
         "Awesome job, you've captured the first facial signature of your digital twin.",
@@ -691,27 +817,40 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
     appendToRecentAiMessage(aiMsg11);
     appendToRecentAiMessage(aiMsg12);
 
+    const handleStartOver = () => {
+      setMessageFeed([]);
+      setDigitalTwinStep(1);
+      setCurrentStep(0);
+      setDigitalTwinModal(false);
+      setVerifyEmailModal(false);
+      setVerifyDeviceModal(false);
+      setEmailVerified(false);
+      setDeviceVerified(false);
+      setMyName('');
+    };
+
     setTimeout(() => {
       setDigitalTwinModal(false);
       const aiMsg1: MessageContent = {
         content: `Dang ${myName} that was a great face.`,
       };
       const aiMsg2: MessageContent = {
-        content: "We're about to complete the process and use some advanced mathematical stuff, but there's a quick formality.",
+        content:
+          "We're about to complete the process and use some advanced mathematical stuff, but there's a quick formality.",
       };
       const aiMsg3: MessageContent = {
         content:
-          "This information is not stored, transmitted or sold by Balnce Ai for any reason. Creating an account means you agree with the Terms and Conditions",
+          'This information is not stored, transmitted or sold by Balnce Ai for any reason. Creating an account means you agree with the Terms and Conditions',
         actions: [
           {
             title: 'Agree',
-            onClick: handleThirdScan,
+            onClick: login,
             success: false,
             style: 'bg-gradient-to-br from-gray-900 bg-black',
           },
           {
             title: 'Disagree',
-            onClick: handleThirdScan,
+            onClick: handleStartOver,
             success: false,
             style: 'bg-transparent',
           },
@@ -751,10 +890,16 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
           >
             <div
               className={`w-full h-full object-cover rounded-full overflow-hidden -scale-x-100 ${
-                digitalTwinStep === 2 || digitalTwinStep === 3 || digitalTwinStep === 4 ? '' : 'hidden'
+                digitalTwinStep === 2 ||
+                digitalTwinStep === 3 ||
+                digitalTwinStep === 4
+                  ? ''
+                  : 'hidden'
               }`}
             >
-              {digitalTwinStep === 2 || digitalTwinStep === 3 || digitalTwinStep === 4 ? (
+              {digitalTwinStep === 2 ||
+              digitalTwinStep === 3 ||
+              digitalTwinStep === 4 ? (
                 <Webcam videoConstraints={videoConstraints} />
               ) : (
                 <></>
@@ -824,7 +969,9 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
               <h1 className="text-4xl mx-6 text-center fadeInUp font-semibold">
                 A Unique Expression:
                 <br />
-                <span className="text-3xl">Something fun, goofy, and just you.</span>
+                <span className="text-3xl">
+                  Something fun, goofy, and just you.
+                </span>
               </h1>
               <span className="fadeInUp text-4xl mt-4">0:05</span>
               <button
@@ -866,7 +1013,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
             className={`flex fadeInUp items-center justify-center align-center px-6 transition-all ${
               currentStep === 7 || currentStep === 9 || currentStep > 10
                 ? '-ml-8 flex-row'
-                : 'min-h-screen flex-col'
+                : 'min-h-screen flex-col pt-64'
             }`}
           >
             <div
@@ -944,20 +1091,55 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                 )}
                 {currentStep === 11 ? (
                   <>
-                    Passwords no longer work, {myName}!
+                    Alright {myName}, let's get to know your taste in brands a
+                    little better so I can tailor recommendations just for you.
                     <br />
                     <br />
-                    The most secure way to login, protect your data and prove
-                    your identity is to create a digital twin with biometric
-                    signatures, like your facial expressions, which cannot be
-                    faked or duplicated.
+                    1.{' '}
+                    <strong className="font-bold">
+                      What are some of your favorite activities or hobbies?
+                    </strong>
+                    <br />
+                    (Ex: hiking, cooking, gaming, traveling, fashion, etc.)
                     <br />
                     <br />
-                    And, you get to pewrsonalize your new superpower endowed
-                    guardian with a name.
+                    2.{' '}
+                    <strong className="font-bold">
+                      What brands do you already use and enjoy?
+                    </strong>
+                    <br />
+                    (Ex: Nike, Apple, Patagonia, Sephora, etc.)
                     <br />
                     <br />
-                    <div className="w-96">
+                    3.{' '}
+                    <strong className="font-bold">
+                      Are there any specific types of products or services
+                      you're interested in?
+                    </strong>
+                    <br />
+                    (Ex: clothiong, electronics, beauty, food delivery, etc.)
+                    <br />
+                    <br />
+                    4.{' '}
+                    <strong className="font-bold">
+                      Any particular style or aesthetic that resonates with you?
+                    </strong>
+                    <br />
+                    (Ex: minimalist, sporty, luxury, bohemian, etc.)
+                    <br />
+                    <br />
+                    5.{' '}
+                    <strong className="font-bold">
+                      Do you have any preferred price ranges or budget
+                      considerations?
+                    </strong>
+                    <br />
+                    <br />
+                    Once you share a bit about your preferences, I'll create a
+                    personalized list of brands for you to explore!
+                    {/* <br />
+                    <br /> */}
+                    {/* <div className="w-96">
                       <button
                         onClick={handleAvatarDemoClick}
                         disabled={digitalTwinStep > 2}
@@ -971,7 +1153,7 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                           ? '✓  First scan'
                           : 'Activate Experience'}
                       </button>
-                    </div>
+                    </div> */}
                   </>
                 ) : (
                   <></>
@@ -1047,8 +1229,8 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                 </div>
                 <div className="">
                   {item.content.map((contentItem, index) => (
-                    <div className="fadeInUp " key={index}>
-                      {contentItem.content}
+                    <div className="fadeInUp whitespace-pre-line" key={index}>
+                      <Markdown>{contentItem.content}</Markdown>
                       {contentItem.actions ? (
                         <div className="w-full flex flex-col gap-2 mt-6 font-semibold text-xs">
                           {contentItem.actions.map((actionItem, index) => (
@@ -1056,7 +1238,11 @@ const WelcomeSignUp: React.FC<WelcomeSignUpProps> = ({ onStepChange }) => {
                               <button
                                 onClick={actionItem.onClick}
                                 disabled={actionItem.success}
-                                className={`rounded-full text-sm w-full mt-2 py-4 ${actionItem.style ? actionItem.style : 'bg-gradient-to-tl from-purple-900 bg-blue-900'} ${
+                                className={`rounded-full text-sm w-full mt-2 py-4 ${
+                                  actionItem.style
+                                    ? actionItem.style
+                                    : 'bg-gradient-to-tl from-purple-900 bg-blue-900'
+                                } ${
                                   actionItem.success
                                     ? 'bg-gradient-to-tl from-green-400 bg-green-800'
                                     : ''

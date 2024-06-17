@@ -529,3 +529,39 @@ opacity: 0;
     animation-range: 5vh 10vh;
   }
 }
+
+.brandTiles {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.brandTile {
+  width: 30%;
+  min-height: 150px;
+  margin: 5px;
+  padding: 10px;
+  text-align: center;
+  border-radius: 10px;
+  background: #ffffff35;
+  font-weight: semibold;
+}
+
+.brandTile img {
+  width: 80%;
+  margin: 10px auto;
+  object-fit: fit-cover;
+  border-radius: 10px;
+}
+
+.brandTile p {
+  margin-bottom: 3px;
+  padding: 5px;
+  font-size: .8rem;
+  font-weight: bold;
+}
